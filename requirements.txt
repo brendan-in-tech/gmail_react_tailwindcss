@@ -6,4 +6,6 @@ google-api-python-client
 requests
 python-dotenv
 pytest
-coverage 
+coverage
+Flask-Session
+Flask-WTF 

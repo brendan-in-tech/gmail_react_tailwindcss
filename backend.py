@@ -7,18 +7,26 @@ from google_auth_oauthlib.flow import Flow
 import google.auth.transport.requests
 import requests as ext_requests
 import googleapiclient.discovery
+from flask_session import Session
+from flask_wtf import CSRFProtect
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.secret_key = os.getenv('FLASK_SECRET_KEY', 'supersecretkey')  # Use env var
+app.secret_key = os.getenv('FLASK_SECRET_KEY', 'supersecretkey')
+app.config['SESSION_TYPE'] = os.getenv('SESSION_TYPE', 'filesystem')
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+Session(app)
+CSRFProtect(app)
 
 # Enable CORS for all domains on all routes
 CORS(app, 
      resources={r"/*": {
-         "origins": ["http://localhost:5173"],
+         "origins": [os.getenv('FRONTEND_URL', 'http://localhost:5173')],
          "methods": ["GET", "POST", "OPTIONS"],
          "allow_headers": ["Content-Type"]
      }},
@@ -195,4 +203,5 @@ def login_google_callback():
 if __name__ == '__main__':
     logger.info("Starting Flask server...")
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-    app.run(debug=True, port=5001, host='0.0.0.0') 
+    debug = os.getenv('FLASK_ENV', 'production') == 'development'
+    app.run(debug=debug, port=5001, host='0.0.0.0') 
